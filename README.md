@@ -65,6 +65,25 @@ new ChatbotWidget({
 - Safari 12+
 - Edge 79+
 
+## 🔒 Sicherheit
+
+**Schutz vor unbefugter Nutzung:**
+Dieses Widget ist durch CORS-Domain-Whitelisting geschützt. Das bedeutet:
+- Das einfache Kopieren der JavaScript-Datei ist nutzlos
+- Das Backend akzeptiert nur Anfragen von autorisierten Domains
+- Jeder Kunde erhält eine spezifische Domain-Konfiguration
+- Unbefugte Nutzung wird automatisch blockiert
+
+**Warum Kopieren nicht funktioniert:**
+```javascript
+// Auch wenn jemand das Widget kopiert:
+new ChatbotWidget({
+    apiUrl: 'https://chatbot-api.ak-pro.com' // ❌ Wird von nicht-autorisierten Domains blockiert
+});
+```
+
+Das Backend prüft bei jeder Anfrage die Herkunftsdomain und blockiert unerlaubte Zugriffe.
+
 ## 📄 Lizenz
 
 Copyright (c) 2025 ak-hosting - Alle Rechte vorbehalten
