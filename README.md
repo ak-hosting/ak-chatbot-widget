@@ -67,7 +67,7 @@ new ChatbotWidget({
 
 ## 📄 Lizenz
 
-MIT License
+Copyright (c) 2025 ak-hosting - Alle Rechte vorbehalten
 
 ## 🆘 Support
 
