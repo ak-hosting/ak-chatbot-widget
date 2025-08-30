@@ -747,7 +747,7 @@
                 linkElement.target = '_blank';
                 linkElement.rel = 'noopener';
                 linkElement.className = 'chatbot-message-link';
-                linkElement.textContent = link.title;
+                linkElement.textContent = link.text || link.title || link.url;
                 container.appendChild(linkElement);
             });
 
@@ -764,7 +764,7 @@
                 card.innerHTML = `
                     <div class="chatbot-product-name">${product.name}</div>
                     <div class="chatbot-product-price">${product.price}</div>
-                    <a href="${product.link}" target="_blank" class="chatbot-product-link">
+                    <a href="${product.url}" target="_blank" class="chatbot-product-link">
                         Mehr Details
                     </a>
                 `;
