@@ -468,6 +468,37 @@
                     text-decoration: underline;
                 }
 
+                .chatbot-message-links {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 12px;
+                    padding: 12px;
+                    background: #f8fafc;
+                    border-radius: 8px;
+                    border-left: 3px solid #667eea;
+                }
+
+                .chatbot-message-link {
+                    color: #667eea;
+                    text-decoration: none;
+                    font-weight: 500;
+                    padding: 8px 12px;
+                    background: white;
+                    border-radius: 6px;
+                    border: 1px solid #e2e8f0;
+                    transition: all 0.2s ease;
+                    display: inline-block;
+                }
+
+                .chatbot-message-link:hover {
+                    background: #667eea;
+                    color: white;
+                    text-decoration: none;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                }
+
                 @media (max-width: 480px) {
                     .chatbot-container {
                         width: 95vw;
@@ -686,6 +717,12 @@
             content.innerHTML = this.formatMessage(text);
             messageDiv.appendChild(content);
 
+            // Add links if available
+            if (links && links.length > 0) {
+                const linksDiv = this.createLinksSection(links);
+                messageDiv.appendChild(linksDiv);
+            }
+
             // Add products if available
             if (products && products.length > 0) {
                 const productsDiv = this.createProductCards(products);
@@ -698,6 +735,23 @@
             // Scroll to bottom
             const messagesElement = this.widget.querySelector('#chatbot-messages');
             messagesElement.scrollTop = messagesElement.scrollHeight;
+        }
+
+        createLinksSection(links) {
+            const container = document.createElement('div');
+            container.className = 'chatbot-message-links';
+
+            links.forEach(link => {
+                const linkElement = document.createElement('a');
+                linkElement.href = link.url;
+                linkElement.target = '_blank';
+                linkElement.rel = 'noopener';
+                linkElement.className = 'chatbot-message-link';
+                linkElement.textContent = link.title;
+                container.appendChild(linkElement);
+            });
+
+            return container;
         }
 
         createProductCards(products) {
