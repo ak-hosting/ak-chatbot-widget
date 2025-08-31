@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erweiterte Chatbot-Widget Integration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .feature h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .controls {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 15px 0;
+        }
+        .control-group label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .status {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Erweiterte Widget-Integration</h1>
+            <p>Vollständige Kontrolle über das Chatbot-Widget mit JavaScript-API</p>
+        </div>
+        
+        <div class="card">
+            <h2>Widget-Steuerung</h2>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Position:</label>
+                    <select id="position-select">
+                        <option value="bottom-right">Unten Rechts</option>
+                        <option value="bottom-left">Unten Links</option>
+                        <option value="top-right">Oben Rechts</option>
+                        <option value="top-left">Oben Links</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Sprache:</label>
+                    <select id="language-select">
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Theme:</label>
+                    <select id="theme-select">
+                        <option value="light">Hell</option>
+                        <option value="dark">Dunkel</option>
+                        <option value="auto">Automatisch</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Titel:</label>
+                    <input type="text" id="title-input" value="Erweiterte Demo" />
+                </div>
+                
+                <div class="control-group">
+                    <label>Primärfarbe:</label>
+                    <input type="color" id="color-input" value="#667eea" />
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn" onclick="updateWidget()">Widget Aktualisieren</button>
+                    <button class="btn" onclick="toggleWidget()">Öffnen/Schließen</button>
+                    <button class="btn" onclick="sendTestMessage()">Test-Nachricht</button>
+                    <button class="btn" onclick="clearChat()">Chat Leeren</button>
+                </div>
+            </div>
+            
+            <div id="status" class="status">
+                Status: Widget wird initialisiert...
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <h3>🎨 Dynamisches Styling</h3>
+                    <p>Ändern Sie Farben, Position und Theme in Echtzeit</p>
+                </div>
+                <div class="feature">
+                    <h3>🌍 Mehrsprachigkeit</h3>
+                    <p>Wechseln Sie zwischen verschiedenen Sprachen</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 Event-Tracking</h3>
+                    <p>Überwachen Sie alle Widget-Interaktionen</p>
+                </div>
+                <div class="feature">
+                    <h3>🔧 API-Kontrolle</h3>
+                    <p>Vollständige programmatische Steuerung</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Event-Log</h2>
+            <div id="event-log" class="log">
+                Warten auf Events...
+            </div>
+            <button class="btn" onclick="clearLog()">Log Leeren</button>
+        </div>
+    </div>
+    
+    <!-- Chatbot Widget wird hier eingefügt -->
+    <div id="chatbot-widget"></div>
+    
+    <!-- Chatbot Widget Script -->
+    <script src="https://cdn.jsdelivr.net/gh/ak-hosting/ak-chatbot-widget@latest/chatbot-widget.js"></script>
+    
+    <script>
+        // Globale Widget-Instanz
+        let chatbotInstance = null;
+        let eventLog = [];
+        
+        // Sprachkonfiguration
+        const languageConfig = {
+            de: {
+                title: 'Erweiterte Demo',
+                welcomeMessage: 'Hallo! Dies ist eine erweiterte Widget-Demo.',
+                placeholder: 'Nachricht eingeben...'
+            },
+            en: {
+                title: 'Advanced Demo',
+                welcomeMessage: 'Hello! This is an advanced widget demo.',
+                placeholder: 'Type your message...'
+            },
+            fr: {
+                title: 'Démo Avancée',
+                welcomeMessage: 'Bonjour! Ceci est une démo avancée du widget.',
+                placeholder: 'Tapez votre message...'
+            },
+            es: {
+                title: 'Demo Avanzada',
+                welcomeMessage: '¡Hola! Esta es una demo avanzada del widget.',
+                placeholder: 'Escribe tu mensaje...'
+            }
+        };
+        
+        // Widget initialisieren
+        function initializeWidget() {
+            const language = document.getElementById('language-select').value;
+            const config = languageConfig[language];
+            
+            // Vorherige Instanz zerstören
+            if (chatbotInstance) {
+                chatbotInstance.destroy();
+            }
+            
+            chatbotInstance = new ChatbotWidget({
+                apiUrl: 'https://chatbot-api.ak-pro.com',
+                position: document.getElementById('position-select').value,
+                language: language,
+                title: document.getElementById('title-input').value || config.title,
+                welcomeMessage: config.welcomeMessage,
+                placeholder: config.placeholder,
+                theme: document.getElementById('theme-select').value,
+                primaryColor: document.getElementById('color-input').value,
+                
+                // Erweiterte Konfiguration
+                autoOpen: false,
+                showTypingIndicator: true,
+                enableSuggestions: true,
+                maxMessages: 100,
+                sessionTimeout: 1800000,
+                
+                // Debug-Modus
+                debug: true,
+                
+                // Event-Handler
+                onReady: function() {
+                    logEvent('Widget bereit');
+                    updateStatus('Widget erfolgreich initialisiert', 'success');
+                },
+                
+                onOpen: function() {
+                    logEvent('Widget geöffnet');
+                    updateStatus('Widget ist geöffnet', 'info');
+                },
+                
+                onClose: function() {
+                    logEvent('Widget geschlossen');
+                    updateStatus('Widget ist geschlossen', 'info');
+                },
+                
+                onMessage: function(message) {
+                    logEvent(`Nachricht gesendet: "${message.text}"`);
+                },
+                
+                onResponse: function(response) {
+                    logEvent(`Antwort erhalten: "${response.text}"`);
+                },
+                
+                onError: function(error) {
+                    logEvent(`Fehler: ${error.message}`, 'error');
+                    updateStatus(`Fehler: ${error.message}`, 'error');
+                },
+                
+                onSessionStart: function(sessionId) {
+                    logEvent(`Neue Session gestartet: ${sessionId}`);
+                },
+                
+                onTypingStart: function() {
+                    logEvent('Bot tippt...');
+                },
+                
+                onTypingEnd: function() {
+                    logEvent('Bot hat aufgehört zu tippen');
+                }
+            });
+        }
+        
+        // Widget aktualisieren
+        function updateWidget() {
+            logEvent('Widget wird aktualisiert...');
+            initializeWidget();
+        }
+        
+        // Widget öffnen/schließen
+        function toggleWidget() {
+            if (chatbotInstance) {
+                if (chatbotInstance.isOpen()) {
+                    chatbotInstance.close();
+                } else {
+                    chatbotInstance.open();
+                }
+            }
+        }
+        
+        // Test-Nachricht senden
+        function sendTestMessage() {
+            if (chatbotInstance) {
+                const testMessages = [
+                    'Hallo, das ist eine Test-Nachricht!',
+                    'Können Sie mir bei einem Problem helfen?',
+                    'Zeigen Sie mir Ihre Produkte'
+                ];
+                const randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
+                chatbotInstance.sendMessage(randomMessage);
+                logEvent(`Test-Nachricht gesendet: "${randomMessage}"`);
+            }
+        }
+        
+        // Chat leeren
+        function clearChat() {
+            if (chatbotInstance) {
+                chatbotInstance.clearHistory();
+                logEvent('Chat-Verlauf geleert');
+            }
+        }
+        
+        // Event loggen
+        function logEvent(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            eventLog.push(logEntry);
+            
+            // Log-Display aktualisieren
+            const logElement = document.getElementById('event-log');
+            logElement.innerHTML = eventLog.slice(-20).join('\n'); // Nur die letzten 20 Events
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Status aktualisieren
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = `Status: ${message}`;
+            statusElement.className = `status ${type}`;
+        }
+        
+        // Log leeren
+        function clearLog() {
+            eventLog = [];
+            document.getElementById('event-log').innerHTML = 'Log geleert...';
+        }
+        
+        // Event-Listener für Formular-Änderungen
+        document.addEventListener('DOMContentLoaded', function() {
+            // Widget beim Laden initialisieren
+            initializeWidget();
+            
+            // Auto-Update bei Änderungen (optional)
+            const autoUpdateElements = ['position-select', 'theme-select'];
+            autoUpdateElements.forEach(id => {
+                document.getElementById(id).addEventListener('change', function() {
+                    // Automatisches Update bei bestimmten Änderungen
+                    setTimeout(updateWidget, 100);
+                });
+            });
+            
+            // Keyboard-Shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 'o': // Ctrl+O: Widget öffnen/schließen
+                            e.preventDefault();
+                            toggleWidget();
+                            break;
+                        case 't': // Ctrl+T: Test-Nachricht
+                            e.preventDefault();
+                            sendTestMessage();
+                            break;
+                        case 'r': // Ctrl+R: Widget neu laden (zusätzlich zu normalem Reload)
+                            if (e.shiftKey) {
+                                e.preventDefault();
+                                updateWidget();
+                            }
+                            break;
+                    }
+                }
+            });
+            
+            logEvent('Erweiterte Demo gestartet');
+        });
+        
+        // Performance-Monitoring
+        let performanceMetrics = {
+            loadTime: 0,
+            responseTime: 0,
+            messageCount: 0
+        };
+        
+        // Load-Time messen
+        const startTime = performance.now();
+        window.addEventListener('load', function() {
+            performanceMetrics.loadTime = performance.now() - startTime;
+            logEvent(`Seite geladen in ${performanceMetrics.loadTime.toFixed(2)}ms`);
+        });
+        
+        // Globale Fehlerbehandlung
+        window.addEventListener('error', function(e) {
+            logEvent(`JavaScript-Fehler: ${e.message}`, 'error');
+        });
+        
+        // Unhandled Promise Rejections
+        window.addEventListener('unhandledrejection', function(e) {
+            logEvent(`Unbehandelte Promise-Ablehnung: ${e.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!-- Shopify Liquid Template Integration für Chatbot-Widget -->
+<!-- Diese Datei sollte in layout/theme.liquid vor dem schließenden </body> Tag eingefügt werden -->
+
+<!-- Chatbot Widget Container mit Shopify-Kontext -->
+<div id="chatbot-widget" 
+     data-api-url="https://chatbot-api.ak-pro.com"
+     data-position="bottom-right"
+     data-title="{{ 'general.chatbot.title' | t | default: 'Shop Support' }}"
+     data-language="{{ request.locale.iso_code }}"
+     data-welcome-message="{{ 'general.chatbot.welcome' | t | default: 'Hallo! Wie kann ich Ihnen beim Einkaufen helfen?' }}"
+     data-placeholder="{{ 'general.chatbot.placeholder' | t | default: 'Nachricht eingeben...' }}"
+     data-context="shopify"></div>
+
+<!-- Chatbot Widget Script -->
+<script src="https://cdn.jsdelivr.net/gh/ak-hosting/ak-chatbot-widget@latest/chatbot-widget.js"></script>
+
+<!-- Shopify-spezifische Konfiguration -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Shopify-Kontext sammeln
+    const shopifyContext = {
+        shop: {
+            domain: '{{ shop.domain }}',
+            name: '{{ shop.name }}',
+            currency: '{{ cart.currency.iso_code }}',
+            locale: '{{ request.locale.iso_code }}',
+            timezone: '{{ shop.timezone }}'
+        },
+        customer: {% if customer %}{
+            id: {{ customer.id }},
+            email: '{{ customer.email }}',
+            firstName: '{{ customer.first_name }}',
+            lastName: '{{ customer.last_name }}',
+            phone: '{{ customer.phone }}',
+            tags: {{ customer.tags | json }},
+            ordersCount: {{ customer.orders_count }},
+            totalSpent: '{{ customer.total_spent | money }}'
+        }{% else %}null{% endif %},
+        cart: {
+            itemCount: {{ cart.item_count }},
+            totalPrice: '{{ cart.total_price | money }}',
+            items: [
+                {% for item in cart.items %}
+                {
+                    id: {{ item.product_id }},
+                    variantId: {{ item.variant_id }},
+                    title: '{{ item.product.title | escape }}',
+                    variant: '{{ item.variant.title | escape }}',
+                    quantity: {{ item.quantity }},
+                    price: '{{ item.price | money }}',
+                    vendor: '{{ item.vendor | escape }}',
+                    productType: '{{ item.product.type | escape }}'
+                }{% unless forloop.last %},{% endunless %}
+                {% endfor %}
+            ]
+        },
+        page: {
+            type: '{{ request.page_type }}',
+            handle: '{{ page.handle | default: product.handle | default: collection.handle }}',
+            title: '{{ page.title | default: product.title | default: collection.title | escape }}'
+        }
+    };
+    
+    // Produktkontext für Produktseiten
+    {% if template contains 'product' %}
+    const productContext = {
+        id: {{ product.id }},
+        title: '{{ product.title | escape }}',
+        vendor: '{{ product.vendor | escape }}',
+        type: '{{ product.type | escape }}',
+        price: '{{ product.price | money }}',
+        compareAtPrice: {% if product.compare_at_price %}'{{ product.compare_at_price | money }}'{% else %}null{% endif %},
+        available: {{ product.available }},
+        tags: {{ product.tags | json }},
+        description: '{{ product.description | strip_html | truncate: 200 | escape }}',
+        images: [
+            {% for image in product.images limit: 3 %}
+            '{{ image | img_url: 'medium' }}'{% unless forloop.last %},{% endunless %}
+            {% endfor %}
+        ],
+        variants: [
+            {% for variant in product.variants %}
+            {
+                id: {{ variant.id }},
+                title: '{{ variant.title | escape }}',
+                price: '{{ variant.price | money }}',
+                available: {{ variant.available }},
+                sku: '{{ variant.sku }}'
+            }{% unless forloop.last %},{% endunless %}
+            {% endfor %}
+        ]
+    };
+    shopifyContext.currentProduct = productContext;
+    {% endif %}
+    
+    // Kollektionskontext für Kollektionsseiten
+    {% if template contains 'collection' %}
+    const collectionContext = {
+        id: {{ collection.id }},
+        title: '{{ collection.title | escape }}',
+        handle: '{{ collection.handle }}',
+        description: '{{ collection.description | strip_html | truncate: 200 | escape }}',
+        productsCount: {{ collection.products_count }},
+        tags: {{ collection.all_tags | json }}
+    };
+    shopifyContext.currentCollection = collectionContext;
+    {% endif %}
+    
+    // Widget mit Shopify-Kontext initialisieren
+    const chatbotWidget = new ChatbotWidget({
+        apiUrl: 'https://chatbot-api.ak-pro.com',
+        position: 'bottom-right',
+        language: '{{ request.locale.iso_code }}',
+        title: '{{ "general.chatbot.title" | t | default: "Shop Support" }}',
+        welcomeMessage: getWelcomeMessage(),
+        placeholder: '{{ "general.chatbot.placeholder" | t | default: "Nachricht eingeben..." }}',
+        
+        // Shopify-spezifische Konfiguration
+        context: shopifyContext,
+        
+        // E-Commerce Features
+        enableProductRecommendations: true,
+        enableCartIntegration: true,
+        enableOrderTracking: {% if customer %}true{% else %}false{% endif %},
+        
+        // Styling an Shop-Theme anpassen
+        primaryColor: '{{ settings.color_primary | default: "#007bff" }}',
+        backgroundColor: '{{ settings.color_background | default: "#ffffff" }}',
+        textColor: '{{ settings.color_text | default: "#333333" }}',
+        
+        // Event-Handler für Shopify-Integration
+        onMessage: function(message) {
+            // Shopify-Kontext zu jeder Nachricht hinzufügen
+            message.shopifyContext = shopifyContext;
+            
+            // Analytics-Event für Shopify
+            if (typeof analytics !== 'undefined') {
+                analytics.track('Chatbot Message Sent', {
+                    message: message.text,
+                    page_type: '{{ request.page_type }}',
+                    customer_id: {% if customer %}{{ customer.id }}{% else %}null{% endif %}
+                });
+            }
+        },
+        
+        onProductRecommendation: function(products) {
+            // Produktempfehlungen verarbeiten
+            products.forEach(function(product) {
+                // Shopify-Produktlink generieren
+                product.shopifyUrl = `/products/${product.handle}`;
+            });
+        },
+        
+        onAddToCart: function(variantId, quantity) {
+            // Produkt zum Warenkorb hinzufügen
+            addToCartViaAjax(variantId, quantity);
+        },
+        
+        onCheckoutIntent: function() {
+            // Zur Kasse weiterleiten
+            window.location.href = '/checkout';
+        }
+    });
+    
+    // Kontextabhängige Begrüßungsnachricht
+    function getWelcomeMessage() {
+        {% if template contains 'product' %}
+            return '{{ "general.chatbot.welcome_product" | t | default: "Hallo! Haben Sie Fragen zu diesem Produkt?" }}';
+        {% elsif template contains 'collection' %}
+            return '{{ "general.chatbot.welcome_collection" | t | default: "Hallo! Kann ich Ihnen bei der Produktauswahl helfen?" }}';
+        {% elsif template contains 'cart' %}
+            return '{{ "general.chatbot.welcome_cart" | t | default: "Hallo! Haben Sie Fragen zu Ihrem Warenkorb?" }}';
+        {% elsif customer %}
+            return '{{ "general.chatbot.welcome_customer" | t | default: "Hallo {customer_name}! Wie kann ich Ihnen helfen?" | replace: "{customer_name}", customer.first_name }}';
+        {% else %}
+            return '{{ "general.chatbot.welcome_default" | t | default: "Hallo! Wie kann ich Ihnen beim Einkaufen helfen?" }}';
+        {% endif %}
+    }
+    
+    // Shopify Ajax Cart Integration
+    function addToCartViaAjax(variantId, quantity) {
+        const formData = {
+            'items': [{
+                'id': variantId,
+                'quantity': quantity
+            }]
+        };
+        
+        fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Warenkorb-Update erfolgreich
+            updateCartCount();
+            
+            // Chatbot über erfolgreiche Hinzufügung informieren
+            if (chatbotWidget) {
+                chatbotWidget.showNotification('Produkt wurde zum Warenkorb hinzugefügt!', 'success');
+            }
+            
+            // Shopify-Event auslösen
+            document.dispatchEvent(new CustomEvent('cart:updated', {
+                detail: { items: data.items }
+            }));
+        })
+        .catch(error => {
+            console.error('Fehler beim Hinzufügen zum Warenkorb:', error);
+            if (chatbotWidget) {
+                chatbotWidget.showNotification('Fehler beim Hinzufügen zum Warenkorb', 'error');
+            }
+        });
+    }
+    
+    // Warenkorb-Anzahl aktualisieren
+    function updateCartCount() {
+        fetch('/cart.js')
+            .then(response => response.json())
+            .then(cart => {
+                // Warenkorb-Anzahl in der Navigation aktualisieren
+                const cartCountElements = document.querySelectorAll('.cart-count, [data-cart-count]');
+                cartCountElements.forEach(element => {
+                    element.textContent = cart.item_count;
+                });
+                
+                // Shopify-Kontext aktualisieren
+                shopifyContext.cart.itemCount = cart.item_count;
+                shopifyContext.cart.totalPrice = Shopify.formatMoney(cart.total_price);
+            });
+    }
+    
+    // Shopify-spezifische Event-Listener
+    document.addEventListener('cart:updated', function(e) {
+        // Chatbot über Warenkorb-Änderungen informieren
+        if (chatbotWidget) {
+            chatbotWidget.updateContext({
+                cart: {
+                    itemCount: e.detail.items.length,
+                    items: e.detail.items
+                }
+            });
+        }
+    });
+    
+    // Variant-Auswahl auf Produktseiten überwachen
+    {% if template contains 'product' %}
+    const variantSelectors = document.querySelectorAll('[name="id"], .product-form__variants select, .product-form__variants input[type="radio"]');
+    variantSelectors.forEach(selector => {
+        selector.addEventListener('change', function() {
+            const selectedVariantId = this.value;
+            const selectedVariant = {{ product.variants | json }}.find(v => v.id == selectedVariantId);
+            
+            if (selectedVariant && chatbotWidget) {
+                // Chatbot über Variant-Änderung informieren
+                chatbotWidget.updateContext({
+                    currentProduct: {
+                        ...shopifyContext.currentProduct,
+                        selectedVariant: selectedVariant
+                    }
+                });
+            }
+        });
+    });
+    {% endif %}
+    
+    // Checkout-Events überwachen
+    const checkoutButtons = document.querySelectorAll('[name="add"], .btn--checkout, .cart__checkout');
+    checkoutButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (chatbotWidget) {
+                chatbotWidget.trackEvent('checkout_initiated', {
+                    source: 'button_click',
+                    page_type: '{{ request.page_type }}'
+                });
+            }
+        });
+    });
+});
+
+// Globale Shopify-Chatbot-Funktionen
+window.ShopifyChatbot = {
+    // Produkt-Empfehlung anzeigen
+    showProductRecommendation: function(productHandle) {
+        if (window.chatbotInstance) {
+            window.chatbotInstance.sendMessage(`Zeige mir mehr über ${productHandle}`);
+            window.chatbotInstance.open();
+        }
+    },
+    
+    // Support für spezifische Bestellung
+    showOrderSupport: function(orderNumber) {
+        if (window.chatbotInstance) {
+            window.chatbotInstance.sendMessage(`Ich brauche Hilfe mit Bestellung #${orderNumber}`);
+            window.chatbotInstance.open();
+        }
+    },
+    
+    // Produktfrage stellen
+    askProductQuestion: function(productId) {
+        if (window.chatbotInstance) {
+            window.chatbotInstance.sendMessage(`Ich habe eine Frage zu Produkt ID ${productId}`);
+            window.chatbotInstance.open();
+        }
+    }
+};
+</script>
+
+<!-- Optional: CSS-Anpassungen für Shopify-Theme -->
+<style>
+/* Chatbot-Widget an Shopify-Theme anpassen */
+.chatbot-widget {
+    font-family: {{ settings.type_base_font.family }}, {{ settings.type_base_font.fallback_families }};
+    z-index: 9999; /* Über Shopify-Navigation */
+}
+
+.chatbot-header {
+    background: {{ settings.color_primary | default: '#007bff' }};
+}
+
+.chatbot-message.user {
+    background: {{ settings.color_accent | default: '#28a745' }};
+}
+
+.chatbot-message.bot {
+    background: {{ settings.color_background | default: '#f8f9fa' }};
+    border-left: 3px solid {{ settings.color_primary | default: '#007bff' }};
+}
+
+/* Mobile Anpassungen für Shopify */
+@media screen and (max-width: 749px) {
+    .chatbot-widget {
+        width: calc(100vw - 20px);
+        height: calc(100vh - 100px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        border-radius: 10px;
+    }
+}
+
+/* Shopify-spezifische Produktkarten im Chat */
+.chatbot-product-card {
+    border: 1px solid {{ settings.color_border | default: '#e1e1e1' }};
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    background: {{ settings.color_background | default: '#ffffff' }};
+}
+
+.chatbot-product-card .product-title {
+    font-weight: bold;
+    color: {{ settings.color_text | default: '#333333' }};
+    margin-bottom: 5px;
+}
+
+.chatbot-product-card .product-price {
+    color: {{ settings.color_price | default: '#007bff' }};
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.chatbot-product-card .add-to-cart-btn {
+    background: {{ settings.color_primary | default: '#007bff' }};
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.chatbot-product-card .add-to-cart-btn:hover {
+    background: {{ settings.color_primary | color_darken: 10 | default: '#0056b3' }};
+}
+</style>
+
+<!-- Shopify-Lokalisierung für Chatbot -->
+{% comment %}
+Fügen Sie diese Übersetzungen zu Ihren Locale-Dateien hinzu:
+
+locales/de.json:
+{
+  "general": {
+    "chatbot": {
+      "title": "Shop Support",
+      "welcome": "Hallo! Wie kann ich Ihnen beim Einkaufen helfen?",
+      "welcome_product": "Hallo! Haben Sie Fragen zu diesem Produkt?",
+      "welcome_collection": "Hallo! Kann ich Ihnen bei der Produktauswahl helfen?",
+      "welcome_cart": "Hallo! Haben Sie Fragen zu Ihrem Warenkorb?",
+      "welcome_customer": "Hallo {customer_name}! Wie kann ich Ihnen helfen?",
+      "placeholder": "Nachricht eingeben..."
+    }
+  }
+}
+
+locales/en.json:
+{
+  "general": {
+    "chatbot": {
+      "title": "Shop Support",
+      "welcome": "Hello! How can I help you with your shopping?",
+      "welcome_product": "Hello! Do you have questions about this product?",
+      "welcome_collection": "Hello! Can I help you choose a product?",
+      "welcome_cart": "Hello! Do you have questions about your cart?",
+      "welcome_customer": "Hello {customer_name}! How can I help you?",
+      "placeholder": "Type your message..."
+    }
+  }
+}
+{% endcomment %}

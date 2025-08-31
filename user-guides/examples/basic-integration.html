@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grundlegende Chatbot-Widget Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .content {
+            line-height: 1.6;
+        }
+        .highlight {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Willkommen auf unserer Website</h1>
+            <p>Dies ist ein Beispiel für die grundlegende Integration des Chatbot-Widgets</p>
+        </div>
+        
+        <div class="content">
+            <h2>Über uns</h2>
+            <p>Wir sind ein innovatives Unternehmen, das hochwertige Produkte und exzellenten Kundenservice bietet.</p>
+            
+            <div class="highlight">
+                <h3>💬 Haben Sie Fragen?</h3>
+                <p>Unser Chatbot steht Ihnen rund um die Uhr zur Verfügung! Klicken Sie auf das Chat-Symbol unten rechts.</p>
+            </div>
+            
+            <h2>Unsere Services</h2>
+            <ul>
+                <li>Produktberatung</li>
+                <li>Technischer Support</li>
+                <li>Bestellhilfe</li>
+                <li>Allgemeine Informationen</li>
+            </ul>
+            
+            <h2>Kontakt</h2>
+            <p>Nutzen Sie das Chat-Widget unten rechts für direkten Support.</p>
+        </div>
+    </div>
+    
+    <!-- Chatbot Widget Container -->
+    <!-- Minimale Konfiguration über data-Attribute -->
+    <div id="chatbot-widget" 
+         data-api-url="https://chatbot-api.ak-pro.com"
+         data-position="bottom-right"
+         data-title="Support Chat"
+         data-welcome-message="Hallo! Wie kann ich Ihnen helfen?"
+         data-language="de"></div>
+    
+    <!-- Chatbot Widget Script laden -->
+    <script src="https://cdn.jsdelivr.net/gh/ak-hosting/ak-chatbot-widget@latest/chatbot-widget.js"></script>
+    
+    <!-- Optional: Zusätzliche Konfiguration -->
+    <script>
+        // Das Widget wird automatisch initialisiert
+        // Zusätzliche Event-Listener können hier hinzugefügt werden
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Chatbot-Widget wird geladen...');
+            
+            // Optional: Widget-Events überwachen
+            document.addEventListener('chatbot-ready', function() {
+                console.log('Chatbot ist bereit!');
+            });
+            
+            document.addEventListener('chatbot-opened', function() {
+                console.log('Chatbot wurde geöffnet');
+                // Analytics-Event senden
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'chatbot_opened', {
+                        'event_category': 'engagement',
+                        'event_label': 'basic_integration'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
