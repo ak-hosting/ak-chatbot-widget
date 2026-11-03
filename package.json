@@ -1,0 +1,1 @@
+{"name":"ak-chatbot-widget","private":true,"scripts":{"test":"node scripts/validate.mjs","lint":"node --check chatbot-widget.js && node --check demo.js && node --check scripts/validate.mjs","build":"npm run test"}}
